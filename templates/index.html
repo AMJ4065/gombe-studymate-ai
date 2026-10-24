@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A student-friendly AI study assistant built for learners in Gombe and beyond.">
+  <title>Gombe StudyMate AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Gombe StudyMate home">
+      <span class="brand-icon">S</span>
+      <span>StudyMate<span class="brand-ai"> AI</span></span>
+    </a>
+    <span class="open-source">OPEN SOURCE LEARNING</span>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow"><span class="pulse"></span> YOUR PERSONAL STUDY PARTNER</div>
+      <h1>Understand more.<br><span>Study smarter.</span></h1>
+      <p>Turn your lecture notes into clear explanations and practice questions. Built for students in Gombe and beyond.</p>
+      <div class="hero-tags"><span>✦ Note-based answers</span><span>✓ Practice quizzes</span><span>⌁ Open-weight AI</span></div>
+    </section>
+
+    <section class="workspace">
+      <div class="panel notes-panel">
+        <div class="panel-heading">
+          <div><span class="step">01</span><h2>Your study notes</h2></div>
+          <span class="tiny-label">YOUR MATERIAL</span>
+        </div>
+        <p class="hint">Paste a section of your lecture note below. The assistant will use it as context.</p>
+        <textarea id="notes" placeholder="Paste your lecture notes here...
+
+Example: Photosynthesis is the process by which green plants use sunlight, carbon dioxide and water to produce glucose and oxygen." maxlength="12000"></textarea>
+        <div class="text-count"><span id="charCount">0</span>/12,000 characters</div>
+        <div class="sample-row">
+          <span class="sample-label">Need a sample?</span>
+          <button type="button" class="text-button" id="sampleBtn">Load biology sample</button>
+        </div>
+      </div>
+
+      <div class="panel ask-panel">
+        <div class="panel-heading">
+          <div><span class="step">02</span><h2>What do you need?</h2></div>
+        </div>
+        <div class="mode-tabs" role="tablist" aria-label="Study mode">
+          <button class="mode-tab active" data-mode="explain" role="tab" aria-selected="true">✧ Ask a question</button>
+          <button class="mode-tab" data-mode="quiz" role="tab" aria-selected="false">☷ Make a quiz</button>
+        </div>
+        <label for="question" id="questionLabel">Your question</label>
+        <textarea id="question" class="question-box" placeholder="Explain this topic in simple terms..." maxlength="1000"></textarea>
+        <button id="submitBtn" class="primary-button" type="button">
+          <span id="buttonText">Explain it to me</span><span aria-hidden="true">→</span>
+        </button>
+        <p class="privacy-note">Your notes are sent to the configured model for this request. This demo does not save them to a database.</p>
+      </div>
+    </section>
+
+    <section class="result panel" id="resultPanel" hidden>
+      <div class="result-heading">
+        <div><span class="step">03</span><h2>Your study response</h2></div>
+        <button id="copyBtn" class="secondary-button" type="button">Copy response</button>
+      </div>
+      <div id="status" class="status" aria-live="polite"></div>
+      <pre id="answer" class="answer"></pre>
+      <div class="result-footer">AI can make mistakes. Check important facts against your course materials.</div>
+    </section>
+
+    <section class="how-it-works">
+      <div><span class="mini-icon">01</span><h3>Bring your notes</h3><p>Use material you are already studying.</p></div>
+      <div><span class="mini-icon">02</span><h3>Ask or practise</h3><p>Get a guided explanation or five practice questions.</p></div>
+      <div><span class="mini-icon">03</span><h3>Learn actively</h3><p>Review the answer and verify it against your notes.</p></div>
+    </section>
+    <footer><span>Gombe StudyMate AI</span><span>Built for learning, powered by open-weight AI.</span></footer>
+  </main>
+  <script>
+    const notes = document.getElementById("notes");
+    const question = document.getElementById("question");
+    const submitBtn = document.getElementById("submitBtn");
+    const buttonText = document.getElementById("buttonText");
+    const resultPanel = document.getElementById("resultPanel");
+    const answer = document.getElementById("answer");
+    const status = document.getElementById("status");
+    const questionLabel = document.getElementById("questionLabel");
+    const modeTabs = [...document.querySelectorAll(".mode-tab")];
+    let mode = "explain";
+
+    notes.addEventListener("input", () => {
+      document.getElementById("charCount").textContent = notes.value.length.toLocaleString();
+    });
+
+    document.getElementById("sampleBtn").addEventListener("click", () => {
+      notes.value = "Photosynthesis is the process by which green plants make their own food. Chlorophyll in the leaves absorbs light energy from the Sun. Plants use this energy to convert carbon dioxide from the air and water from the soil into glucose and oxygen. The process mainly occurs in chloroplasts. The word equation is: carbon dioxide + water + light energy → glucose + oxygen. Photosynthesis is important because it provides food for plants and releases oxygen into the atmosphere.";
+      document.getElementById("charCount").textContent = notes.value.length.toLocaleString();
+      question.value = "Explain photosynthesis in simple terms and identify its raw materials.";
+    });
+
+    modeTabs.forEach(tab => tab.addEventListener("click", () => {
+      mode = tab.dataset.mode;
+      modeTabs.forEach(item => {
+        const active = item === tab;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-selected", String(active));
+      });
+      question.disabled = mode === "quiz";
+      questionLabel.textContent = mode === "quiz" ? "Quiz mode selected" : "Your question";
+      question.placeholder = mode === "quiz" ? "We'll generate five multiple-choice questions from your notes." : "Explain this topic in simple terms...";
+      buttonText.textContent = mode === "quiz" ? "Generate practice quiz" : "Explain it to me";
+    }));
+
+    submitBtn.addEventListener("click", async () => {
+      resultPanel.hidden = false;
+      answer.textContent = "";
+      status.className = "status";
+      status.textContent = "Working on your study response…";
+      submitBtn.disabled = true;
+      buttonText.textContent = "Please wait…";
+      try {
+        const response = await fetch("/api/study", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({notes: notes.value, question: question.value, mode})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Something went wrong.");
+        answer.textContent = data.answer;
+        status.textContent = "Response generated with " + data.model;
+        status.className = "status success";
+      } catch (err) {
+        status.textContent = err.message || "Unable to reach the study assistant.";
+        status.className = "status error";
+      } finally {
+        submitBtn.disabled = false;
+        buttonText.textContent = mode === "quiz" ? "Generate practice quiz" : "Explain it to me";
+      }
+      resultPanel.scrollIntoView({behavior: "smooth", block: "start"});
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", async () => {
+      if (!answer.textContent) return;
+      try {
+        await navigator.clipboard.writeText(answer.textContent);
+        document.getElementById("copyBtn").textContent = "Copied!";
+        setTimeout(() => document.getElementById("copyBtn").textContent = "Copy response", 1500);
+      } catch {
+        status.textContent = "Copy was blocked by the browser. Select the response text to copy it.";
+      }
+    });
+  </script>
+</body>
+</html>
