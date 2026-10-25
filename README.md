@@ -1,88 +1,150 @@
 # Gombe StudyMate AI
 
-A small, open-source AI study assistant designed to help students turn lecture notes into understandable explanations and practice quizzes.
+Gombe StudyMate AI is an open-source educational web application designed to help students understand lecture notes, ask questions about their study materials, and practise with AI-generated multiple-choice quizzes.
 
-## Features
+The project aims to make personalised study support more accessible to students in Gombe, Nigeria, and beyond.
 
-- Ask questions about pasted lecture notes.
-- Generate five multiple-choice practice questions with an answer key.
-- Clean, responsive web interface.
-- Uses an open-weight Gemma model through Ollama.
-- No database or account required for this MVP.
-- Notes are processed for the request and are not saved by this app.
+Features
 
-## Tech stack
+- Ask questions: Get student-friendly explanations based on supplied lecture notes.
+- Generate practice quizzes: Create five multiple-choice questions with four options each and an answer key with explanations.
+- Responsive interface: A clean web interface for studying and revising.
+- Local AI inference: Integrates with an open-weight Gemma model through Ollama.
+- No account required: The MVP does not require registration or a database.
+- Note privacy: The application does not intentionally save submitted notes to a database. Notes are processed to answer the current request.
+
+Technology Stack
 
 - Python 3.10+
 - Flask
-- HTML, CSS, JavaScript
-- Ollama
-- Gemma 4 (`gemma4:e2b` by default)
+- HTML, CSS, and JavaScript
+- "Ollama" (https://ollama.com/)
+- "Gemma 3 1B" (https://ollama.com/library/gemma3:1b) for local AI development and testing
+- "Render" (https://render.com/) for web hosting
+- GitHub for source-code management
 
-## Prerequisites
+Prerequisites
 
-1. Install Python 3.10 or newer.
-2. Install Ollama: https://ollama.com/download
-3. Open a terminal and download the model:
+Before running the project locally, install:
 
-```bash
-ollama pull gemma4:e2b
-```
+1. Python 3.10 or newer.
+2. "Ollama for Windows" (https://ollama.com/download/windows).
+3. Git (optional if you download the project ZIP instead of cloning the repository).
 
-The first model download can take time and requires free disk space. Check current model tags and hardware requirements in the Ollama/Gemma documentation if this tag is unavailable.
+Gemma 3 1B is a relatively small model, but performance depends on available RAM, CPU, and other running applications.
 
-## Run locally (Windows PowerShell)
+Installation and Setup
 
-Open this folder in VS Code, then in the terminal run:
+1. Download the project
 
-```powershell
+Clone the repository:
+
+git clone https://github.com/AMJ4065/gombe-studymate-ai.git
+cd gombe-studymate-ai
+
+Alternatively, download the ZIP from GitHub and extract it.
+
+2. Create a Python virtual environment
+
+In VS Code, open the project folder and run:
+
 py -m venv .venv
+
+Activate the environment in PowerShell:
+
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-ollama run gemma4:e2b
-```
 
-Leave Ollama available, then open a **second terminal** in VS Code and run:
+If activation is blocked by your PowerShell execution policy, use Command Prompt:
 
-```powershell
-.\.venv\Scripts\Activate.ps1
-python app.py
-```
-
-Open http://127.0.0.1:5000 in your browser.
-
-If PowerShell blocks virtual-environment activation, use Command Prompt instead:
-
-```bat
-py -m venv .venv
 .venv\Scripts\activate.bat
+
+3. Install Python dependencies
+
+With the virtual environment activated, run:
+
 python -m pip install -r requirements.txt
-python app.py
-```
 
-Make sure the Ollama app is running and the model is downloaded before testing the Ask or Quiz buttons.
+4. Download Gemma 3 1B
 
-## Configuration
+Make sure Ollama is installed and running. Then download the model:
 
-The default model is `gemma4:e2b`. To use another model already installed in Ollama, set `OLLAMA_MODEL` before starting Flask.
+ollama pull gemma3:1b
 
-PowerShell example:
+Confirm the model is installed:
 
-```powershell
+ollama list
+
+You should see "gemma3:1b" in the model list.
+
+5. Start the application
+
+Run the Flask application from the project directory:
+
+py app.py
+
+Open the local application in your browser:
+
+http://127.0.0.1:5000
+
+Make sure Ollama is running and the model is available before testing the Ask a Question and Make a Quiz features.
+
+Configuration
+
+The application supports these environment variables:
+
+Variable| Default| Purpose
+"OLLAMA_URL"| "http://localhost:11434"| Ollama API address
+"OLLAMA_MODEL"| "gemma3:1b"| Model tag used by the application
+
+To select the model explicitly in Windows PowerShell:
+
 $env:OLLAMA_MODEL="gemma3:1b"
-python app.py
-```
+py app.py
 
-Use the actual model tag returned by `ollama list`. Do not claim Gemma 4 was used if you changed the model.
+To use another model, download it through Ollama first and set "OLLAMA_MODEL" to the exact tag shown by "ollama list".
 
-## Open source
+Running Tests
 
-This project is released under the MIT License. Contributions, bug reports, and improvements are welcome.
+After starting the application:
 
-## Responsible use
+1. Open the website in your browser.
+2. Paste at least a few sentences of lecture notes.
+3. Enter a question and test Ask a Question.
+4. Select Make a Quiz and verify the generated questions, options, and answer key.
+5. Try a short set of notes first if responses are slow.
 
-AI-generated answers may be inaccurate. Students should verify important information against course materials. The app is a learning aid, not an official exam source.
+AI-generated content can contain errors. Always verify important answers against your course materials.
 
-## Hackathon submission note
+Deployment
 
-Before submitting, test both modes on your laptop, confirm the repository is public, and include a short screen recording or live demo if possible. Only list AI tools and technologies that were actually used.
+The web application can be hosted on a platform such as Render. However, the default Ollama address, "http://localhost:11434", refers to the machine running the Flask application.
+
+When Flask runs on Render, "localhost" refers to the Render service—not your personal computer. Therefore, the hosted application cannot access Gemma running on your laptop through this address.
+
+The public website needs a separately accessible AI endpoint before its AI features can work online. Do not publish a claim that hosted AI inference is working until it has been configured and tested.
+
+Privacy and Responsible Use
+
+- The MVP does not require a user account or database.
+- Submitted notes are sent to the configured AI service to generate responses.
+- The application does not intentionally persist study notes in a database.
+- Avoid submitting passwords, personal records, or other sensitive information.
+- AI-generated explanations and practice questions may be inaccurate. Verify important information against trusted learning materials.
+- Generated questions are for practice and are not official examination questions.
+
+Open Source and Contributions
+
+This project is released under the MIT License. See ""LICENSE"" (LICENSE) for the licence terms.
+
+Contributions, suggestions, bug reports, and improvements are welcome. Please open an issue to discuss a significant change before submitting a pull request.
+
+Project Links
+
+- Source code: https://github.com/AMJ4065/gombe-studymate-ai
+- Live web application: https://gombe-studymate-ai.onrender.com
+
+The live website may not have working AI features until a hosted AI endpoint is configured.
+
+---
+
+Built to support students in Gombe and beyond through accessible AI-assisted learning.
